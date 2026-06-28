@@ -1,0 +1,5 @@
+# Place at  %UserProfile%\.wslconfig  on Windows, then run:  wsl --shutdown
+[wsl2]
+memory=10GB
+processors=6
+swap=4GB
