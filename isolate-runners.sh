@@ -17,19 +17,22 @@ warn() { printf '\033[1;33m[warn]\033[0m %s\n' "$*"; }
 log "Granting $USER write access to /usr/local/bin (syft/grype)"
 sudo chown "$USER" /usr/local/bin
 
-# (2) per-runner $HOME isolation via systemd drop-in
+# (2) per-runner $HOME isolation via systemd drop-in.
+# HOME must be the runner's INSTALL dir ($d), not a sibling like $d/_home: gitleaks-action
+# computes its SARIF artifact root from $HOME and the SARIF lives in $d/_work/... — so $HOME
+# must be an ANCESTOR of _work. $d satisfies that AND is distinct per runner (no pnpm race).
 rm -rf "$HOME/setup-pnpm" 2>/dev/null || true     # drop any stale shared pnpm state
 changed=0
 for d in "$HOME"/actions-runner-*; do
   [ -d "$d" ] || continue
   n="$(basename "$d")"
-  H="$d/_home"; mkdir -p "$H"
+  H="$d"
   svc="$(cat "$d/.service" 2>/dev/null || true)"
   if [ -z "$svc" ]; then warn "no .service file in $d — is the runner installed as a service? skipping"; continue; fi
   log "Isolating $n -> HOME=$H  (service: $svc)"
   sudo mkdir -p "/etc/systemd/system/${svc}.d"
   printf '[Service]\nEnvironment=HOME=%s\n' "$H" | sudo tee "/etc/systemd/system/${svc}.d/home.conf" >/dev/null
-  rm -rf "$H/setup-pnpm" 2>/dev/null || true
+  rm -rf "$H/setup-pnpm" "$d/_home/setup-pnpm" 2>/dev/null || true
   changed=1
 done
 
