@@ -64,6 +64,15 @@ Creates `~/actions-runner-1..3`, each with its own systemd service, all sharing 
 `self-hosted,linux,x64`. They should show **Idle** under *Settings → Actions → Runners* as
 `uka-wsl2-1 … uka-wsl2-3`. Add more later: `./register.sh <TOKEN> 4` (idempotent).
 
+## Step 5 — Fix `actions/setup-python` on Debian
+```bash
+bash setup-toolcache.sh
+```
+`actions/setup-python` ships prebuilt CPython **only for Ubuntu**, so on Debian it fails with
+*"version '3.12' … not found for debian 13"*. This script populates a shared runner tool cache
+(`/opt/hostedtoolcache`) with Python via `uv`, points the runners at it (`AGENT_TOOLSDIRECTORY`),
+and restarts them. Idempotent — re-run anytime (e.g. `PYVERS="3.12 3.13" bash setup-toolcache.sh`).
+
 ---
 
 ## Parallelism notes
