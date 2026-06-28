@@ -38,6 +38,10 @@ for V in $PYVERS; do
   rm -rf "$DEST"; mkdir -p "$DEST"
   cp -a "$PYROOT/." "$DEST/"
   [ -e "$DEST/bin/python" ] || ln -sf python3 "$DEST/bin/python"
+  # PEP 668: uv's python-build-standalone ships an EXTERNALLY-MANAGED marker that blocks
+  # `pip install` into the base env. Hosted runners have no such marker; the workflows do
+  # `pip install uv|bandit|pip-audit` directly, so drop it to match hosted behaviour.
+  find "$DEST" -name EXTERNALLY-MANAGED -delete 2>/dev/null || true
   touch "$TOOLCACHE/Python/$FULL/x64.complete"
   log "  cached $("$DEST/bin/python" -V 2>&1)  ->  $DEST"
 done
