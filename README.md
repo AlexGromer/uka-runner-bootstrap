@@ -73,6 +73,15 @@ bash setup-toolcache.sh
 (`/opt/hostedtoolcache`) with Python via `uv`, points the runners at it (`AGENT_TOOLSDIRECTORY`),
 and restarts them. Idempotent — re-run anytime (e.g. `PYVERS="3.12 3.13" bash setup-toolcache.sh`).
 
+## Step 6 — Isolate runners (multi-runner gaps)
+```bash
+bash isolate-runners.sh
+```
+Fixes two things ephemeral hosted runners don't hit: (a) makes `/usr/local/bin` writable so the
+`syft`/`grype` installers work, and (b) gives **each runner its own `$HOME`** via a systemd drop-in
+so `pnpm/action-setup`'s `~/setup-pnpm` (and other `~` state) doesn't **race** across the 3 runners.
+Idempotent.
+
 ---
 
 ## Parallelism notes
