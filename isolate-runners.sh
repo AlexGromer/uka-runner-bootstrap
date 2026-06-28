@@ -29,9 +29,13 @@ for d in "$HOME"/actions-runner-*; do
   H="$d"
   svc="$(cat "$d/.service" 2>/dev/null || true)"
   if [ -z "$svc" ]; then warn "no .service file in $d — is the runner installed as a service? skipping"; continue; fi
-  log "Isolating $n -> HOME=$H  (service: $svc)"
+  log "Isolating $n -> HOME=$H + PrivateTmp  (service: $svc)"
   sudo mkdir -p "/etc/systemd/system/${svc}.d"
-  printf '[Service]\nEnvironment=HOME=%s\n' "$H" | sudo tee "/etc/systemd/system/${svc}.d/home.conf" >/dev/null
+  sudo rm -f "/etc/systemd/system/${svc}.d/home.conf" 2>/dev/null || true   # superseded
+  # Per-runner $HOME (pnpm/gitleaks-artifact) + private /tmp (gitleaks downloads /tmp/gitleaks.tmp,
+  # shared across runners otherwise -> "Destination file path /tmp/gitleaks.tmp already exists").
+  printf '[Service]\nEnvironment=HOME=%s\nPrivateTmp=yes\n' "$H" \
+    | sudo tee "/etc/systemd/system/${svc}.d/isolation.conf" >/dev/null
   rm -rf "$H/setup-pnpm" "$d/_home/setup-pnpm" 2>/dev/null || true
   changed=1
 done
