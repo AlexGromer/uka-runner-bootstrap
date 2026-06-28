@@ -23,9 +23,15 @@ sudo apt-get update -y
 sudo apt-get install -y curl git jq build-essential ca-certificates unzip gnupg
 
 # --- 2. Docker Engine -------------------------------------------------------
-if command -v docker >/dev/null 2>&1; then
-  log "Docker present: $(docker --version)"
+# NB: Debian + Docker Desktop ship a 'docker' STUB ("activate WSL integration")
+# that fools `command -v docker`. Gate on the daemon (dockerd), not the client.
+if command -v dockerd >/dev/null 2>&1; then
+  log "Docker Engine present: $(docker --version 2>/dev/null || echo '?')"
 else
+  if command -v docker >/dev/null 2>&1; then
+    warn "Removing Docker-Desktop 'docker' stub so native Docker Engine installs clean"
+    sudo rm -f /usr/bin/docker /usr/bin/docker-compose 2>/dev/null || true
+  fi
   log "Installing Docker Engine (get.docker.com)"
   curl -fsSL https://get.docker.com | sudo sh
 fi
