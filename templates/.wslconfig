@@ -1,5 +1,6 @@
 # Place at  %UserProfile%\.wslconfig  on Windows, then run:  wsl --shutdown
+# Sized for multiple parallel runners on a 48 GB / i5-11400F-class host.
 [wsl2]
-memory=10GB
-processors=6
-swap=4GB
+memory=32GB
+processors=10
+swap=8GB
